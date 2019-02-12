@@ -47,17 +47,23 @@ func NewLogger(r *http.Request) *Logger {
 }
 
 func (l *Logger) Log(w io.Writer, resp *http.Response, err error) {
+	format := DefaultFormat
+
 	l.End = time.Now()
-	l.Response.StatusCode = resp.StatusCode
-	l.Response.Header = resp.Header
-	resp.Body, l.Response.Body = copyBody(resp.Body)
+	if err != nil {
+		l.Error = err
+	}
+	if resp != nil {
+		l.Response.StatusCode = resp.StatusCode
+		l.Response.Header = resp.Header
+		resp.Body, l.Response.Body = copyBody(resp.Body)
+		if f, ok := resp.Request.Context().Value(ContextFormat).(string); ok {
+			format = f
+		}
+	}
 
 	if w == nil {
 		w = os.Stdout
-	}
-	format := DefaultFormat
-	if f, ok := resp.Request.Context().Value(ContextFormat).(string); ok {
-		format = f
 	}
 	Template.ExecuteTemplate(w, format, l)
 }

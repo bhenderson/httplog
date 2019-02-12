@@ -3,6 +3,7 @@ package httplog
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -12,6 +13,8 @@ import (
 )
 
 func TestLogger(t *testing.T) {
+	output := new(bytes.Buffer)
+
 	DefaultTransport.Output = output
 	http.DefaultTransport = DefaultTransport
 
@@ -67,6 +70,16 @@ func TestLogger(t *testing.T) {
 			assert.Equal(t, exp, act)
 		})
 	})
+}
+
+func TestError(t *testing.T) {
+	output := new(bytes.Buffer)
+
+	req, _ := http.NewRequest("GET", "http://example", nil)
+	l := NewLogger(req)
+	l.Log(output, nil, errors.New("there was an error"))
+	exp := `method=GET url=http://example error="there was an error"` + "\n"
+	assert.Equal(t, exp, output.String())
 }
 
 func dumpBody(r io.ReadCloser) string {

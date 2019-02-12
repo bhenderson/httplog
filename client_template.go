@@ -28,7 +28,7 @@ var Template = template.Must(template.New("httplog").
 		`
 {{- define "KV" -}}
 {{- if .Error -}}
-method={{ .Request.Method }} url={{ printf "%v" .Request.URL }} error={{ .Error }}
+method={{ .Request.Method }} url={{ printf "%v" .Request.URL }} error={{ printf "%q" .Error }}
 {{- else -}}
 method={{ .Request.Method }} url={{ printf "%v" .Request.URL }} code={{ .Response.StatusCode }} duration={{ printf "%v" .Duration }}
 {{- end }}
