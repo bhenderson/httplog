@@ -19,6 +19,14 @@ var (
 	ContextFormat = &contextKey{"httplog.format"}
 )
 
+// Trace sets up http.DefaultTransport to use DefaultTransport with Format named format.
+func Trace(format string) {
+	if format != "" {
+		DefaultFormat = format
+	}
+	http.DefaultTransport = DefaultTransport
+}
+
 // Transport implements http.RoundTripper with logging
 type Transport struct {
 	http.RoundTripper

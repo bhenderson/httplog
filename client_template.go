@@ -5,8 +5,6 @@ import (
 	"net/http/httputil"
 	"text/template"
 	"time"
-
-	"github.com/moul/http2curl"
 )
 
 // DefaultFormat is the default template name used for logging. This can be
@@ -20,7 +18,6 @@ var Template = template.Must(template.New("httplog").
 	Funcs(template.FuncMap{
 		"since":   time.Since,
 		"json":    json.Marshal,
-		"curl":    http2curl.GetCurlCommand,
 		"dumpin":  httputil.DumpRequestOut,
 		"dumpout": httputil.DumpResponse,
 	}).
@@ -36,11 +33,6 @@ method={{ .Request.Method }} url={{ printf "%v" .Request.URL }} code={{ .Respons
 
 {{- define "JSON" -}}
 {{ json . | printf "%s" }}
-{{ end -}}
-
-{{- define "CURL" -}}
-{{ curl .Request }}
-{{ dumpout .Response true | printf "%s" }}
 {{ end -}}
 `,
 	),

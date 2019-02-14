@@ -2,6 +2,7 @@ package httplog
 
 import (
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -31,6 +32,9 @@ type Logger struct {
 	Start time.Time
 	End   time.Time
 	Error error
+
+	req  *http.Request
+	resp *http.Response
 }
 
 func NewLogger(r *http.Request) *Logger {
@@ -40,6 +44,7 @@ func NewLogger(r *http.Request) *Logger {
 	l.Request.Header = r.Header
 	l.Start = time.Now()
 	r.Body, l.Request.Body = copyBody(r.Body)
+	l.req = r
 
 	RequestCtx(r, ContextLogger, l)
 
@@ -57,7 +62,10 @@ func (l *Logger) Log(w io.Writer, resp *http.Response, err error) {
 		l.Response.StatusCode = resp.StatusCode
 		l.Response.Header = resp.Header
 		resp.Body, l.Response.Body = copyBody(resp.Body)
-		if f, ok := resp.Request.Context().Value(ContextFormat).(string); ok {
+		l.resp = resp
+		ctx := resp.Request.Context()
+		val := ctx.Value(ContextFormat)
+		if f, ok := val.(string); ok {
 			format = f
 		}
 	}
@@ -65,9 +73,20 @@ func (l *Logger) Log(w io.Writer, resp *http.Response, err error) {
 	if w == nil {
 		w = os.Stdout
 	}
-	Template.ExecuteTemplate(w, format, l)
+	err = Template.ExecuteTemplate(w, format, l)
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 func (l *Logger) Duration() time.Duration {
 	return l.End.Sub(l.Start)
+}
+
+func (l *Logger) RawRequest() *http.Request {
+	return l.req
+}
+
+func (l *Logger) RawResponse() *http.Response {
+	return l.resp
 }
